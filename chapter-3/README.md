@@ -22,4 +22,7 @@
 * assert a (aが真であればパス)
 * refuse a (aが偽であればパス)
 
-
+### テスティングフレームワーク
+* Minitest: 上記記載済み。
+* RSpec: 独自のDSL（ドメイン固有言語）を使ったテスト。
+* test-unit: もっとも古く、Ruby本体のテストコードはtest-unitを採用している。
