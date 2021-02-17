@@ -1,8 +1,8 @@
 require 'minitest/autorun' # プログラム内でMinitestを使えるようにするためのコード
 require './lib/fizz_buzz' # require_relative '../lib/fizz_buzz'
 
-class SampleTest < Minitest::Test # Minitest::Testクラスを継承
-  def test_sample
+class FizzBuzzTest < Minitest::Test # Minitest::Testクラスを継承
+  def test_fizz_buzz
     assert_equal '1', fizz_buzz(1)
     assert_equal '2', fizz_buzz(2)
     assert_equal 'Fizz', fizz_buzz(3)
