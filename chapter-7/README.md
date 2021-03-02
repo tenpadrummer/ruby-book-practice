@@ -300,3 +300,360 @@ product = Product.new('A great movie', 1000)
 product.to_s
 #=> "name: A great movie, price: 1000円"
 ```
+
+### クラスの継承
+
+スーパークラス: 親クラス
+サブクラス: 子クラス
+
+単一継承: 継承できるスーパークラスは1つだけ。Rubyにおける継承はこの関係となっている。
+
+継承の頂点は、BasicObject、それをObjectクラスが継承、その次にString, Numeric, Array, HashクラスがObjectクラスを継承している。
+
+* 作成したクラスは宣言しただけで、Objectクラスをデフォルトで継承している。
+* オブジェクトのクラスは、classメソッドを使用し確認できる。
+
+```
+class サブクラス < スーパークラス
+end
+```
+
+#### superでスーパークラスのメソッドを呼び出す
+
+superでスーパークラスの同名メソッドを呼び出すことができる。
+
+```
+class Product
+  attr_reader :name, :price
+
+  def initialize(name, price)
+    @name = name
+    @price = price
+  end
+end
+product = Product.new('A great movie', 1000)
+product.name
+product.price
+
+class DVD < Product
+  attr_reader :running_time
+
+  def initialize(name, price, running_time)
+    # スーパークラスのinitializeメソッドを呼び出す
+    super(name, price)
+    @running_time = running_time
+  end
+end
+dvd = DVD.new('A great movie', 1000, 120)
+dvd.name
+dvd.price
+dvd.running_time
+
+```
+
+#### メソッドのオーバーライド
+サブクラスではスーパークラスと同名のメソッドを定義することで、スーパークラスの処理を上書きできる。
+
+#### クラスメソッドの継承
+クラスを継承すると、クラスメソッドも継承される。
+
+### メソッドの公開レベル
+
+#### publicメソッド
+クラスの外部からでも自由に呼び出せるメソッド。
+
+#### privateメソッド
+クラスの外から呼び出せず、クラス内部のみで使えるメソッド。
+（レシーバを指定して呼び出すことができないメソッド）
+privateメソッドではselfを使って呼び出すとエラーになる。(selfはレシーバ指定でメソッドを呼び出すから)
+
+**privateメソッドは、サブクラスでも呼び出すことができる。**
+→ privateメソッドは、そのクラス内だけでなく、サブクラスからでもprivate以下のメソッドを呼び出すことができる。
+
+```
+class << self
+```
+この構文でクラスメソッドをprivateにできる。
+
+#### protectedメソッド
+メソッドを定義したクラス自身と、そのサブクラスのインスタンスメソッドから、レシーバ付きで呼び出せる。
+
+```
+class User
+  attr_reader :name
+
+  def initialize(name, weight)
+    @name = name
+    @weight = weight
+  end
+
+  def heavier_than?(other_user)
+    other_user.weight < @weight
+  end
+
+  protected
+
+  # 同じクラスかサブクラスであればレシーバ付きで呼び出せる
+  def weight
+    @weight
+  end
+end
+alice = User.new('Alice', 50)
+bob = User.new('Bob', 60)
+
+alice.heavier_than?(bob)
+#=> false
+bob.heavier_than?(alice)
+#=> true
+
+alice.weight
+#=> NoMethodError: protected method `weight' called for #<User:0x007fbb24001ba8 @name="Alice", @weight=50>
+```
+
+### 定数について
+
+定数はクラスの外部から直接参照が可能。
+
+```
+クラス名::定数
+```
+
+#### 再代入
+定数はそのままの状態だと色々変更ができ、さらに再代入も可能。
+
+```
+class Product
+  DEFAULT_PRICE = 0
+  DEFAULT_PRICE = 1000
+end
+
+Product::DEFAULT_PRICE
+#=> 1000
+
+Product::DEFAULT_PRICE = 3000
+#=> warning: already initialized constant Product::DEFAULT_PRICE
+Product::DEFAULT_PRICE
+#=> 3000
+```
+
+#### ミュータブルなオブジェクトとfreeze
+
+```
+class Product
+  NAME = 'A product'
+  SOME_NAMES = ['Foo', 'Bar', 'Baz']
+  SOME_PRICES = { 'Foo' => 1000, 'Bar' => 2000, 'Baz' => 3000 }
+end
+
+Product::NAME.upcase!
+Product::NAME
+#=> "A PRODUCT"
+
+Product::SOME_NAMES << 'Hoge'
+Product::SOME_NAMES
+#=> ["Foo", "Bar", "Baz", "Hoge"]
+
+Product::SOME_PRICES['Hoge'] = 4000
+Product::SOME_PRICES
+#=> {"Foo"=>1000, "Bar"=>2000, "Baz"=>3000, "Hoge"=>4000}
+```
+
+freezeメソッドで定数の値を凍結する。つまり変更不可。
+
+### 様々な変数
+
+#### クラスインスタンス変数
+
+クラスインスタンス変数: インスタンスの作成とは関係なく、クラス自身が持っているデータ。インスタンスメソッド内で共有されることがなく、スーパークラスやサブクラスでも共有されない。
+インスタンス変数: クラス名.newでオブジェクトを作成した際に、オブジェクトごとに管理させる変数。
+
+```
+class Product
+  # クラスインスタンス変数
+  @name = 'Product'
+
+  def self.name
+    # クラスインスタンス変数
+    @name
+  end
+
+  def initialize(name)
+    # インスタンス変数
+    @name = name
+  end
+
+  def name
+    # インスタンス変数
+    @name
+  end
+end
+```
+#### クラス変数
+
+インスタンスメソッド内で共有され、スーパークラスやサブクラスでも共有される変数。
+
+```
+@@変数名
+```
+
+#### グローバル変数
+クラスの内部外部問わず、プログラムのどこからでも変更・参照可能。
+
+```
+$変数名
+```
+
+### エイリアスメソッドの定義
+独自にクラス内で作成したメソッドにも、エイリアスメソッドを定義できる。
+
+```
+alias 新しい名前 元の名前
+```
+
+```
+class User
+  def hello
+    'Hello'
+  end
+
+  alias greeting hello
+end
+```
+
+### メソッドの削除
+
+```
+undef 削除するメソッドの名前
+```
+
+### ネストしたクラスの定義
+
+```
+class 外側のクラス
+  class 内側のクラス
+  end
+end
+```
+
+### 演算子の挙動と再定義
+=で終わるメソッドを定義することができる。
+=で終わるメソッドは変数に代入するような形式でそのメソッドを呼び出せる
+
+```
+class User
+  def name=(value)
+    @name = value
+  end
+end
+
+user = User.new
+user.name = 'Alice'
+```
+
+```
+| ^ 6 <=> == === =~ > >= < <= << >>
++ - * / % ** - +@ -@ [] []= ` !  != !~
+```
+これらは再定義できる。
+
+
+```
+=, ?:, .., ..., not, &&, and ||, or, ::
+```
+これらはRubyの制御構文に組み込まれているので、再定義できない。
+
+### 等値を判断するメソッドや演算子
+
+* equal? object_idが等しい場合にtrue
+* == オブジェクトの内容が等しいか判断
+* eql? ハッシュのキーとして2つのオブジェクトが等しいか判断
+* === 主にcase, whenで使われる。
+
+### オープンクラス
+Rubyのクラスは、変更に対してオープン（つまりクラスの継承などに制限がない）なので「オープンクラス」と呼ばれたりする。
+Railsでは、オープンクラスを活用し、標準のRubyにはない様々な便利メソッドを独自定義している。
+
+### モンキーパッチ
+新しいメソッドを追加するだけでなく、既存のメソッドを上書きすることもできる。
+既存の実装を上書きし、自分が期待する挙動に変更することを「モンキーパッチ」と呼ぶ。
+
+```
+class User
+  def initialize(name)
+    @name = name
+  end
+
+  def hello
+    "Hello, #{@name}!"
+  end
+end
+
+user = User.new('Alice')
+user.hello #=> "Hello, Alice!"
+
+# helloメソッドにモンキーパッチを適応
+class User
+  def hello
+    "#{@name}さん、こんにちは！"
+  end
+end
+
+user.hello
+#=> "Aliceさん、こんにちは！"
+```
+
+### 特異メソッド
+特定のオブジェクトだけに紐づくメソッドのこと。
+クラスメソッドも一種の特異メソッド。（公式はクラスメソッド　＝　特異メソッドという見解）
+RubyではStringやUser
+
+```
+alice = 'I am Alice.'
+bob = 'I am Bob.'
+
+# aliceのオブジェクトにだけ、shuffleメソッドを定義する
+def alice.shuffle
+  chars.shuffle.join
+end
+
+alice.shuffle
+#=> "m le a.icIA"
+bob.shuffle
+```
+
+### ダックタイピング
+オブジェクトがなんであろうとそのメソッドがよびだせればOKとするプログラミングスタイルのこと。
+
+```
+def display_name(object)
+  puts "Name is <<#{object.name}>>"
+end
+
+class User
+  def name
+    'Alice'
+  end
+end
+
+class Product
+  def name
+    'A great movie'
+  end
+end
+
+# UserクラスとProductクラスはお互いに無関係なクラス、しかしdisplay_nameメソッドは実行可能
+user = User.new
+display_name(user)
+#=> Name is <<Alice>>
+
+product = Product.new
+display_name(product)
+#=> Name is <<A great movie>>
+```
+
+### respond_to?
+オブジェクトに対して得意のメソッドが呼び出し可能か確認するメソッド
+
+### メソッドのオーバーロード（多重定義）
+Rubyではオーバーロードはない。
+オーバーロード: 引数のデータ型や個数の違いに応じて同じ名前のメソッドを何個も定義できるというもの。
